@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Slack Alert — Setup & Usage Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            color: #1a1a1a;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24pt;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 11pt;
+            margin-bottom: 25px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+        }
+
+        .toc h2 {
+            font-size: 14pt;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .toc ol {
+            margin-left: 20px;
+        }
+
+        .toc li {
+            margin-bottom: 4px;
+        }
+
+        .toc a {
+            color: #2980b9;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section cards */
+        .section {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0 20px 20px 20px;
+            margin-bottom: 20px;
+            break-inside: avoid;
+        }
+
+        .section h2 {
+            font-size: 14pt;
+            color: #fff;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            margin: 0 -20px 15px -20px;
+            padding: 12px 20px;
+            border-radius: 7px 7px 0 0;
+        }
+
+        .section h3 {
+            font-size: 11pt;
+            color: #c0392b;
+            margin: 18px 0 8px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+
+        .section h4 {
+            font-size: 10pt;
+            color: #555;
+            margin: 12px 0 6px 0;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        ul, ol {
+            margin: 8px 0 12px 22px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        /* Code blocks */
+        pre {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 14px 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            margin: 8px 0 14px 0;
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 9.5pt;
+            color: #c0392b;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .comment { color: #6c7086; }
+        .string { color: #a6e3a1; }
+        .keyword { color: #cba6f7; }
+        .flag { color: #89b4fa; }
+
+        /* Info/warning boxes */
+        .info-box {
+            border-left: 4px solid #3498db;
+            background: #eaf2f8;
+            padding: 12px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 12px 0;
+        }
+
+        .warning-box {
+            border-left: 4px solid #e67e22;
+            background: #fef5e7;
+            padding: 12px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 12px 0;
+        }
+
+        .success-box {
+            border-left: 4px solid #27ae60;
+            background: #eafaf1;
+            padding: 12px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 12px 0;
+        }
+
+        .danger-box {
+            border-left: 4px solid #e74c3c;
+            background: #fdedec;
+            padding: 12px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 12px 0;
+        }
+
+        .box-label {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 14px 0;
+            font-size: 10pt;
+        }
+
+        th {
+            background: #f8f9fa;
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        td {
+            padding: 7px 10px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        /* Architecture diagram */
+        .diagram {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px 20px;
+            border-radius: 6px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 9pt;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 10px 0 14px 0;
+        }
+
+        /* File tree */
+        .file-tree {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 14px 16px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 9.5pt;
+            line-height: 1.6;
+            margin: 10px 0 14px 0;
+        }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13pt;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            margin: 2px 0 6px 0;
+            color: #2c3e50;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 8.5pt;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .badge-safe { background: #d4edda; color: #155724; }
+        .badge-risky { background: #fff3cd; color: #856404; }
+        .badge-deny { background: #f8d7da; color: #721c24; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Claude Code Slack Alert</h1>
+<p class="subtitle">Two-Way Slack Approval System &amp; Chat Daemon for Claude Code &mdash; Setup &amp; Usage Guide</p>
+
+<!-- ================================================================== -->
+<!-- TABLE OF CONTENTS                                                   -->
+<!-- ================================================================== -->
+<div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+        <li><a href="#overview">Overview &mdash; What This Does</a></li>
+        <li><a href="#architecture">Architecture &amp; How It Works</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#slack-app">Step 1 &mdash; Create the Slack App</a></li>
+        <li><a href="#install-files">Step 2 &mdash; Install the Project Files</a></li>
+        <li><a href="#configure-env">Step 3 &mdash; Configure the .env File</a></li>
+        <li><a href="#configure-hooks">Step 4 &mdash; Configure Claude Code Hooks</a></li>
+        <li><a href="#command-rules">Step 5 &mdash; Customize Command Rules</a></li>
+        <li><a href="#run-daemon">Step 6 &mdash; Start the Slack Chat Daemon</a></li>
+        <li><a href="#usage-approvals">Using the Approval System</a></li>
+        <li><a href="#usage-chat">Using the Chat Daemon</a></li>
+        <li><a href="#files-reference">File Reference</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ol>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 1: OVERVIEW                                                 -->
+<!-- ================================================================== -->
+<div class="section" id="overview">
+    <h2>1. Overview &mdash; What This Does</h2>
+
+    <p>Claude Code Slack Alert is a two-component system that connects Claude Code to Slack, giving you <strong>remote visibility and control</strong> over what Claude Code is doing:</p>
+
+    <h3>Component A: Slack Approval Hook</h3>
+    <p>A Claude Code <strong>PreToolUse hook</strong> that intercepts tool calls (bash commands, file writes, edits) before they execute. It posts a formatted approval request to your Slack channel and waits for you to approve or deny via emoji reaction or thread reply. This lets you supervise Claude Code from your phone or anywhere you have Slack access.</p>
+
+    <h3>Component B: Slack Chat Daemon</h3>
+    <p>A long-running <strong>background daemon</strong> that monitors a Slack channel for messages and bridges them to Claude Code CLI sessions. Send a message in Slack, and Claude Code runs the prompt and replies in a thread. Continue the conversation by replying in the thread. This gives you a full Claude Code chat experience inside Slack.</p>
+
+    <h3>Key Features</h3>
+    <ul>
+        <li><strong>Smart command classification</strong> &mdash; safe commands auto-approve, risky commands go to Slack, dangerous commands are blocked</li>
+        <li><strong>Two-way approval</strong> &mdash; approve/deny via thumbs up/down emoji reactions <em>or</em> thread reply text</li>
+        <li><strong>Feedback loop</strong> &mdash; deny with a text reply and Claude receives your feedback</li>
+        <li><strong>Thread-based conversations</strong> &mdash; each Slack thread maps to a Claude Code session with full <code>--resume</code> support</li>
+        <li><strong>Project routing</strong> &mdash; prefix Slack messages with a project shorthand to target a specific project directory</li>
+        <li><strong>Terminal fallback</strong> &mdash; if Slack approval times out (5 min), falls back to the terminal prompt</li>
+        <li><strong>No external dependencies</strong> &mdash; uses only Python standard library (no pip install needed)</li>
+    </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 2: ARCHITECTURE                                             -->
+<!-- ================================================================== -->
+<div class="section" id="architecture">
+    <h2>2. Architecture &amp; How It Works</h2>
+
+    <h3>Approval Flow (PreToolUse Hook)</h3>
+    <div class="diagram">
+Claude Code calls a tool (e.g., Bash "npm install")
+         │
+         ▼
+┌─────────────────────────┐
+│  claude-slack-approver.py│   ◄── PreToolUse Hook
+│  (reads stdin JSON)      │
+└────────┬────────────────┘
+         │
+         ▼
+┌─────────────────────────┐     ┌─────────────┐
+│  Classify command        │────►│  SAFE        │──► Auto-approve (exit 0)
+│  (command-rules.json)    │     └─────────────┘
+│                          │     ┌─────────────┐
+│                          │────►│  DENY        │──► Block immediately (exit 0 + deny JSON)
+│                          │     └─────────────┘
+│                          │     ┌─────────────┐
+│                          │────►│  RISKY       │──► Post to Slack ▼
+└─────────────────────────┘     └─────────────┘
+                                        │
+                                        ▼
+                              ┌──────────────────┐
+                              │   Slack Channel    │
+                              │   "🔒 Approval     │
+                              │    Needed"         │
+                              └────────┬───────────┘
+                                       │
+                           ┌───────────┼───────────┐
+                           ▼           ▼           ▼
+                        👍 Emoji    👎 Emoji    💬 Thread
+                        reaction    reaction     reply
+                           │           │           │
+                           ▼           ▼           ▼
+                        APPROVE      DENY      APPROVE (if "ok"/"yes"/etc.)
+                                               DENY + FEEDBACK (anything else)
+                                                       │
+                                        ▼──────────────┘
+                              Claude Code receives decision
+                              and continues or stops
+    </div>
+
+    <h3>Chat Daemon Flow</h3>
+    <div class="diagram">
+┌──────────────┐        ┌──────────────────────┐        ┌───────────────┐
+│  Slack User   │──msg──►│  claude-slack-daemon  │──CLI──►│  Claude Code   │
+│  (#channel)   │        │  (polls every 3s)     │        │  (claude -p)   │
+│               │◄─reply─│                       │◄─json──│               │
+└──────────────┘        └──────────────────────┘        └───────────────┘
+                               │        ▲
+                               │        │
+                          sessions.json
+                         (thread → session mapping)
+
+New message   → starts new session → stores session_id
+Thread reply  → resumes session via --resume &lt;session_id&gt;
+    </div>
+
+    <h3>How the Two Components Work Together</h3>
+    <p>When the daemon launches Claude Code for a Slack message, it sets the <code>SLACK_THREAD_TS</code> environment variable. The approval hook detects this and posts its approval requests <strong>in the same Slack thread</strong>, keeping everything organized in one conversation.</p>
+
+    <div class="info-box">
+        <p class="box-label">Daemon Runs in Danger Mode</p>
+        <p>The daemon launches Claude Code with <code>--dangerously-skip-permissions</code>, meaning <strong>all tool calls are auto-approved</strong> without Slack or terminal prompts. This prevents noisy approval requests for every read-only command (find, grep, cat, etc.) that Claude uses while researching your question. Since you're explicitly sending prompts via Slack, the initial message itself serves as your authorization.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 3: PREREQUISITES                                            -->
+<!-- ================================================================== -->
+<div class="section" id="prerequisites">
+    <h2>3. Prerequisites</h2>
+    <ul>
+        <li><strong>Claude Code CLI</strong> &mdash; installed and authenticated (<code>claude</code> command available on PATH)</li>
+        <li><strong>Python 3.8+</strong> &mdash; no third-party packages required</li>
+        <li><strong>A Slack workspace</strong> where you can create apps</li>
+        <li><strong>tmux</strong> &mdash; for running the daemon in the background (optional but recommended)</li>
+        <li><strong>WSL / Linux / macOS</strong> &mdash; the scripts are bash/Python based</li>
+    </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 4: CREATE SLACK APP                                         -->
+<!-- ================================================================== -->
+<div class="section" id="slack-app">
+    <h2>4. Step 1 &mdash; Create the Slack App</h2>
+
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h4>Go to the Slack API Dashboard</h4>
+            <p>Visit <code>https://api.slack.com/apps</code> and click <strong>"Create New App"</strong> → <strong>"From scratch"</strong>.</p>
+            <p>Name it something like <code>Claude Code Alert</code> and select your workspace.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h4>Configure Bot Token Scopes</h4>
+            <p>Navigate to <strong>OAuth &amp; Permissions</strong> → <strong>Bot Token Scopes</strong> and add these scopes:</p>
+            <table>
+                <tr><th>Scope</th><th>Purpose</th></tr>
+                <tr><td><code>chat:write</code></td><td>Post messages and approval requests</td></tr>
+                <tr><td><code>channels:history</code></td><td>Read channel messages (daemon polling)</td></tr>
+                <tr><td><code>reactions:read</code></td><td>Read emoji reactions for approve/deny</td></tr>
+                <tr><td><code>channels:read</code></td><td>Access channel information</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h4>Install to Workspace</h4>
+            <p>Click <strong>"Install to Workspace"</strong> and authorize. Copy the <strong>Bot User OAuth Token</strong> (starts with <code>xoxb-</code>). You'll need this for the <code>.env</code> file.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+            <h4>Create a Channel &amp; Invite the Bot</h4>
+            <p>Create a dedicated Slack channel (e.g., <code>#claude-alerts</code>). Then invite the bot to the channel:</p>
+            <pre><code>/invite @Claude Code Alert</code></pre>
+            <p>Get the Channel ID: right-click the channel name → <strong>View channel details</strong> → copy the ID at the bottom (starts with <code>C</code>).</p>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <p class="box-label">Tip: Webhook URL (Optional)</p>
+        <p>You can also set up an <strong>Incoming Webhook</strong> under <strong>Incoming Webhooks</strong> in your Slack app settings. This isn't required for the core approval/daemon functionality but can be kept for reference or other integrations.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 5: INSTALL FILES                                            -->
+<!-- ================================================================== -->
+<div class="section" id="install-files">
+    <h2>5. Step 2 &mdash; Install the Project Files</h2>
+
+    <p>Create a directory for the project and place all files there:</p>
+
+    <div class="file-tree">
+claude-slack-approver/
+├── claude-slack-approver.py    # PreToolUse hook — Slack approval
+├── claude-slack-daemon.py      # Background daemon — Slack chat bridge
+├── command-rules.json          # Smart command classification rules
+├── start-daemon.sh             # tmux helper to manage the daemon
+├── .env                        # Configuration (tokens, channel, projects)
+└── sessions.json               # Auto-managed: active session tracking
+    </div>
+
+    <pre><code><span class="comment"># Clone or copy the files to your preferred location</span>
+mkdir -p /mnt/c/projects/claude-slack-approver
+<span class="comment"># Copy all project files into this directory</span>
+
+<span class="comment"># Make the daemon starter executable</span>
+chmod +x /mnt/c/projects/claude-slack-approver/start-daemon.sh</code></pre>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 6: CONFIGURE .env                                           -->
+<!-- ================================================================== -->
+<div class="section" id="configure-env">
+    <h2>6. Step 3 &mdash; Configure the .env File</h2>
+
+    <p>Create or edit the <code>.env</code> file in the project directory with your Slack credentials and project settings:</p>
+
+    <pre><code><span class="comment"># Slack Bot Token (xoxb-...) — from Slack App → OAuth &amp; Permissions</span>
+SLACK_BOT_TOKEN=xoxb-YOUR-BOT-TOKEN-HERE
+
+<span class="comment"># Slack Channel ID — right-click channel → View channel details → copy ID</span>
+SLACK_CHANNEL_ID=C0XXXXXXXXX
+
+<span class="comment"># Slack Webhook URL (optional, kept for reference)</span>
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
+
+<span class="comment"># --- Daemon configuration ---</span>
+
+<span class="comment"># Default working directory when no project specified</span>
+DEFAULT_PROJECT_DIR=/mnt/c/projects
+
+<span class="comment"># Poll interval in seconds for the daemon</span>
+DAEMON_POLL_INTERVAL=3
+
+<span class="comment"># Project shortcuts — use "name: prompt" in Slack messages</span>
+<span class="comment"># Format: PROJECT_&lt;shorthand&gt;=&lt;absolute_path&gt;</span>
+PROJECT_myapp=/mnt/c/projects/my-app
+PROJECT_backend=/mnt/c/projects/backend-api</code></pre>
+
+    <table>
+        <tr><th>Variable</th><th>Required</th><th>Description</th></tr>
+        <tr><td><code>SLACK_BOT_TOKEN</code></td><td>Yes</td><td>Bot User OAuth Token from your Slack app (<code>xoxb-...</code>)</td></tr>
+        <tr><td><code>SLACK_CHANNEL_ID</code></td><td>Yes</td><td>The ID of the Slack channel to post to / monitor</td></tr>
+        <tr><td><code>SLACK_WEBHOOK_URL</code></td><td>No</td><td>Incoming Webhook URL (not used by core scripts)</td></tr>
+        <tr><td><code>DEFAULT_PROJECT_DIR</code></td><td>No</td><td>Fallback working directory for the daemon (default: <code>/mnt/c/projects</code>)</td></tr>
+        <tr><td><code>DAEMON_POLL_INTERVAL</code></td><td>No</td><td>How often the daemon checks Slack for new messages (default: <code>3</code> seconds)</td></tr>
+        <tr><td><code>PROJECT_*</code></td><td>No</td><td>Project shorthand mappings for the daemon (see <a href="#usage-chat">Chat Daemon Usage</a>)</td></tr>
+    </table>
+
+    <div class="danger-box">
+        <p class="box-label">Security Warning</p>
+        <p>The <code>.env</code> file contains your Slack bot token. Never commit this file to version control. Add it to your <code>.gitignore</code>.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 7: CONFIGURE HOOKS                                          -->
+<!-- ================================================================== -->
+<div class="section" id="configure-hooks">
+    <h2>7. Step 4 &mdash; Configure Claude Code Hooks</h2>
+
+    <p>Add the approval hook to your Claude Code settings. Edit <code>~/.claude/settings.json</code> and add (or merge into) the <code>"hooks"</code> section:</p>
+
+    <pre><code>{
+  <span class="string">"hooks"</span>: {
+    <span class="string">"PreToolUse"</span>: [
+      {
+        <span class="string">"matcher"</span>: <span class="string">"Bash|Write|Edit"</span>,
+        <span class="string">"hooks"</span>: [
+          {
+            <span class="string">"type"</span>: <span class="string">"command"</span>,
+            <span class="string">"command"</span>: <span class="string">"python3 /mnt/c/projects/claude-slack-approver/claude-slack-approver.py"</span>
+          }
+        ]
+      }
+    ],
+    <span class="string">"PostToolUse"</span>: [
+      {
+        <span class="string">"matcher"</span>: <span class="string">"Bash|Write|Edit"</span>,
+        <span class="string">"hooks"</span>: [
+          {
+            <span class="string">"type"</span>: <span class="string">"command"</span>,
+            <span class="string">"command"</span>: <span class="string">"python3 /mnt/c/projects/claude-slack-approver/claude-slack-approver.py --resolve"</span>
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h3>What Each Hook Does</h3>
+    <table>
+        <tr><th>Hook</th><th>Trigger</th><th>Action</th></tr>
+        <tr>
+            <td><code>PreToolUse</code></td>
+            <td>Before <code>Bash</code>, <code>Write</code>, or <code>Edit</code> tools execute</td>
+            <td>Classifies the command, posts to Slack if risky, waits for approval</td>
+        </tr>
+        <tr>
+            <td><code>PostToolUse</code></td>
+            <td>After <code>Bash</code>, <code>Write</code>, or <code>Edit</code> tools complete</td>
+            <td>Updates the Slack message to show "Approved via terminal" if you approved locally instead of via Slack</td>
+        </tr>
+    </table>
+
+    <h3>Matcher Customization</h3>
+    <p>The <code>"matcher"</code> field is a regex that matches tool names. Adjust it to control which tools trigger Slack alerts:</p>
+    <table>
+        <tr><th>Matcher</th><th>What It Covers</th></tr>
+        <tr><td><code>"Bash"</code></td><td>Only bash/shell commands</td></tr>
+        <tr><td><code>"Bash|Write"</code></td><td>Bash commands and new file creation</td></tr>
+        <tr><td><code>"Bash|Write|Edit"</code></td><td>Bash commands, file creation, and file edits (recommended)</td></tr>
+        <tr><td><code>".*"</code></td><td>All tools (very noisy)</td></tr>
+    </table>
+
+    <div class="info-box">
+        <p class="box-label">Path Note</p>
+        <p>Adjust the path in the <code>"command"</code> field to match where you installed the project files. The path shown above uses a typical WSL path.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 8: COMMAND RULES                                            -->
+<!-- ================================================================== -->
+<div class="section" id="command-rules">
+    <h2>8. Step 5 &mdash; Customize Command Rules</h2>
+
+    <p>The <code>command-rules.json</code> file controls how Bash commands are classified. This is what makes the system smart &mdash; safe commands run instantly, risky commands need approval, and dangerous commands are always blocked.</p>
+
+    <h3>Classification Levels</h3>
+    <table>
+        <tr>
+            <th>Level</th>
+            <th>Behavior</th>
+            <th>Examples</th>
+        </tr>
+        <tr>
+            <td><span class="badge badge-safe">SAFE</span></td>
+            <td>Auto-approved silently. No Slack message posted.</td>
+            <td><code>ls</code>, <code>git status</code>, <code>cat</code>, <code>grep</code>, <code>pwd</code></td>
+        </tr>
+        <tr>
+            <td><span class="badge badge-risky">RISKY</span></td>
+            <td>Posted to Slack for approval. Waits up to 5 minutes.</td>
+            <td><code>git push</code>, <code>npm install</code>, <code>rm</code>, <code>sudo</code></td>
+        </tr>
+        <tr>
+            <td><span class="badge badge-deny">DENY</span></td>
+            <td>Blocked immediately. Never allowed to run.</td>
+            <td><code>rm -rf /</code>, <code>chmod 777</code>, <code>dd if=... of=/dev/</code></td>
+        </tr>
+    </table>
+
+    <h3>Rule Format</h3>
+    <pre><code>{
+  <span class="string">"safe"</span>: {
+    <span class="string">"prefixes"</span>: [<span class="string">"ls"</span>, <span class="string">"git status"</span>, <span class="string">"cat"</span>, <span class="string">"grep"</span>]
+  },
+  <span class="string">"risky"</span>: {
+    <span class="string">"prefixes"</span>: [<span class="string">"rm"</span>, <span class="string">"git push"</span>, <span class="string">"npm install"</span>, <span class="string">"sudo"</span>],
+    <span class="string">"patterns"</span>:  [<span class="string">"curl .* -X\\s*(POST|PUT|DELETE|PATCH)"</span>]
+  },
+  <span class="string">"deny"</span>: {
+    <span class="string">"patterns"</span>: [<span class="string">"rm\\s+-rf\\s+/\\s*$"</span>, <span class="string">"chmod\\s+777"</span>]
+  }
+}</code></pre>
+
+    <ul>
+        <li><strong>Prefixes</strong> &mdash; match the start of a command (e.g., <code>"git push"</code> matches <code>git push origin main</code>)</li>
+        <li><strong>Patterns</strong> &mdash; full regex patterns matched against the entire command string</li>
+        <li><strong>Piped/chained commands</strong> &mdash; each segment (<code>&&</code>, <code>||</code>, <code>;</code>, <code>|</code>) is classified individually; the worst classification wins</li>
+        <li><strong>Unknown commands</strong> &mdash; default to <span class="badge badge-risky">RISKY</span> (fail-safe: require approval)</li>
+    </ul>
+
+    <h3>Default Safe Commands</h3>
+    <p>Out of the box, these read-only commands are auto-approved:</p>
+    <pre><code>ls  find  cat  head  tail  wc  echo  date  pwd  which
+git status  git log  git diff  git branch
+python3 -c  python3 --version  node --version  npm --version
+du  df  tree  stat  file  diff  env  printenv  whoami
+hostname  uname  grep  rg  sort  uniq  basename  dirname
+realpath  readlink  test  true  false</code></pre>
+
+    <div class="info-box">
+        <p class="box-label">Customization Tip</p>
+        <p>Add your own safe commands (build tools, linters, test runners) to reduce Slack noise. For example, add <code>"npm test"</code>, <code>"pytest"</code>, or <code>"make build"</code> to the safe prefixes if you trust those commands to run unattended.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 9: START DAEMON                                             -->
+<!-- ================================================================== -->
+<div class="section" id="run-daemon">
+    <h2>9. Step 6 &mdash; Start the Slack Chat Daemon</h2>
+
+    <p>The daemon is optional &mdash; you only need it if you want to chat with Claude Code directly from Slack. The approval hook works independently.</p>
+
+    <h3>Using the Helper Script (Recommended)</h3>
+    <pre><code><span class="comment"># Start the daemon in a tmux session</span>
+/mnt/c/projects/claude-slack-approver/start-daemon.sh start
+
+<span class="comment"># Check if it's running</span>
+/mnt/c/projects/claude-slack-approver/start-daemon.sh status
+
+<span class="comment"># View live logs</span>
+/mnt/c/projects/claude-slack-approver/start-daemon.sh logs
+
+<span class="comment"># Stop the daemon</span>
+/mnt/c/projects/claude-slack-approver/start-daemon.sh stop</code></pre>
+
+    <h3>Manual Start</h3>
+    <pre><code><span class="comment"># Run directly (blocks terminal)</span>
+python3 /mnt/c/projects/claude-slack-approver/claude-slack-daemon.py
+
+<span class="comment"># Or in a tmux session</span>
+tmux new-session -d -s claude-daemon "python3 /mnt/c/projects/claude-slack-approver/claude-slack-daemon.py"</code></pre>
+
+    <h3>Startup Output</h3>
+    <p>When the daemon starts successfully, you'll see:</p>
+    <pre><code>Claude Slack Daemon started
+  Bot user ID: U0XXXXXXXXX
+  Channel: C0XXXXXXXXX
+  Default project: /mnt/c/projects
+  Project shortcuts: {'myapp': '/mnt/c/projects/my-app', ...}
+  Poll interval: 3s
+  Listening for messages...</code></pre>
+
+    <div class="warning-box">
+        <p class="box-label">Important</p>
+        <p>The daemon requires <code>claude</code> CLI to be on the PATH. It runs <code>claude -p &lt;prompt&gt; --output-format json --dangerously-skip-permissions</code> under the hood. Make sure Claude Code is installed and authenticated before starting the daemon.</p>
+    </div>
+
+    <div class="info-box">
+        <p class="box-label">Permission Model</p>
+        <p>Daemon-launched sessions run with <code>--dangerously-skip-permissions</code>, which means Claude Code will execute all tool calls (bash, file writes, edits) without prompting for approval. This avoids flooding the Slack thread with approval requests for every harmless read command. Your Slack message is the authorization &mdash; Claude acts on it autonomously.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 10: USING APPROVALS                                         -->
+<!-- ================================================================== -->
+<div class="section" id="usage-approvals">
+    <h2>10. Using the Approval System</h2>
+
+    <h3>What You See in Slack</h3>
+    <p>When Claude Code tries to run a risky command, a message like this appears in your Slack channel:</p>
+    <pre><code>🔒 <strong>Claude Code — Approval Needed</strong>
+<strong>Project:</strong> my-app  |  <strong>Session:</strong> ce960202
+<strong>Why:</strong> Install project dependencies
+<strong>Tool:</strong> Bash
+┌──────────────────────────────┐
+│  npm install                 │
+└──────────────────────────────┘
+
+👍 = approve  |  👎 = deny  |  Reply in thread with feedback</code></pre>
+
+    <h3>How to Respond</h3>
+    <table>
+        <tr><th>Action</th><th>How</th><th>Effect</th></tr>
+        <tr>
+            <td>Approve</td>
+            <td>React with 👍 (<code>:thumbsup:</code> or <code>:+1:</code>)</td>
+            <td>Command executes immediately</td>
+        </tr>
+        <tr>
+            <td>Deny</td>
+            <td>React with 👎 (<code>:thumbsdown:</code> or <code>:-1:</code>)</td>
+            <td>Command is blocked; Claude Code sees "Denied via Slack"</td>
+        </tr>
+        <tr>
+            <td>Approve with note</td>
+            <td>Reply in thread: <code>ok</code>, <code>yes</code>, <code>go ahead</code>, <code>lgtm</code>, <code>approve</code>, etc.</td>
+            <td>Command executes; Claude sees your feedback text</td>
+        </tr>
+        <tr>
+            <td>Deny with feedback</td>
+            <td>Reply in thread with any other text (e.g., <code>use yarn instead</code>)</td>
+            <td>Command is blocked; Claude Code receives your feedback and adjusts</td>
+        </tr>
+        <tr>
+            <td>No response</td>
+            <td>Do nothing for 5 minutes</td>
+            <td>Falls back to terminal prompt (if you're at the keyboard)</td>
+        </tr>
+    </table>
+
+    <h3>Approval Keywords (Thread Replies)</h3>
+    <p>These words at the start of a thread reply count as approval:</p>
+    <pre><code>ok  okay  approve  approved  lgtm  yes  go ahead
+go  yep  yup  sure  do it  proceed  ship it  y</code></pre>
+
+    <h3>Status Updates</h3>
+    <p>After you respond, the Slack message updates to show the outcome:</p>
+    <ul>
+        <li>✅ <strong>Approved via Slack</strong> &mdash; you approved with an emoji</li>
+        <li>✅ <strong>Approved via thread reply</strong> &mdash; you approved with a text reply</li>
+        <li>✅ <strong>Approved via terminal</strong> &mdash; you approved at the local terminal instead</li>
+        <li>🚫 <strong>Denied via Slack</strong> &mdash; you denied with an emoji</li>
+        <li>💬 <strong>Denied with feedback:</strong> <em>your text</em> &mdash; you denied with a reason</li>
+        <li>⏳ <strong>Waiting for terminal approval...</strong> &mdash; Slack timed out, waiting on terminal</li>
+    </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 11: USING CHAT DAEMON                                       -->
+<!-- ================================================================== -->
+<div class="section" id="usage-chat">
+    <h2>11. Using the Chat Daemon</h2>
+
+    <h3>Starting a New Conversation</h3>
+    <p>Post a message in the configured Slack channel. The daemon picks it up and runs it through Claude Code CLI:</p>
+
+    <table>
+        <tr><th>Slack Message Format</th><th>What Happens</th></tr>
+        <tr>
+            <td><code>explain the auth middleware</code></td>
+            <td>Runs in <code>DEFAULT_PROJECT_DIR</code></td>
+        </tr>
+        <tr>
+            <td><code>myapp: add input validation to the login form</code></td>
+            <td>Runs in the <code>PROJECT_myapp</code> directory from <code>.env</code></td>
+        </tr>
+        <tr>
+            <td><code>/mnt/c/projects/foo run the tests</code></td>
+            <td>Runs in the explicit absolute path</td>
+        </tr>
+    </table>
+
+    <h3>Continuing a Conversation</h3>
+    <p>Reply in the thread to continue the same Claude Code session. The daemon uses <code>--resume &lt;session_id&gt;</code> to maintain context:</p>
+
+    <pre><code><strong>You:</strong>       myapp: what does the user model look like?
+<strong>Claude:</strong>    The User model is defined in src/models/user.ts...
+<strong>You (thread):</strong> add an "isActive" boolean field to it
+<strong>Claude:</strong>    I've added the isActive field... (continues same session)</code></pre>
+
+    <h3>Session Management</h3>
+    <ul>
+        <li>Sessions are stored in <code>sessions.json</code> and map Slack thread timestamps to Claude Code session IDs</li>
+        <li>Sessions automatically expire after <strong>24 hours</strong> of inactivity</li>
+        <li>Each invocation has a <strong>10-minute timeout</strong></li>
+        <li>Long responses (over 4000 characters) are automatically split into multiple thread replies</li>
+        <li>A <strong>⏳ "Claude is thinking..."</strong> message appears while processing, then is <strong>deleted</strong> and replaced with the actual response</li>
+        <li>All responses are <strong>Slack-formatted</strong> &mdash; Claude is instructed to use bullet points, bold, and backticks instead of markdown tables or headings (which Slack doesn't render)</li>
+        <li>Daemon sessions run with <code>--dangerously-skip-permissions</code> so Claude executes all commands autonomously without posting approval requests</li>
+    </ul>
+
+    <h3>Project Shortcuts</h3>
+    <p>Configure shortcuts in <code>.env</code> so you don't have to type full paths:</p>
+    <pre><code><span class="comment"># In .env</span>
+PROJECT_myapp=/mnt/c/projects/my-app
+PROJECT_api=/mnt/c/projects/backend-api
+PROJECT_docs=/mnt/c/projects/documentation</code></pre>
+    <p>Then in Slack, just type: <code>myapp: fix the login bug</code></p>
+
+    <div class="success-box">
+        <p class="box-label">Autonomous Execution</p>
+        <p>Daemon-launched sessions run with <code>--dangerously-skip-permissions</code>, so Claude executes all commands without prompting for approval. Your Slack message is the authorization. This keeps the thread clean — no approval clutter for the dozens of read-only commands Claude runs while working on your request.</p>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 12: FILE REFERENCE                                          -->
+<!-- ================================================================== -->
+<div class="section" id="files-reference">
+    <h2>12. File Reference</h2>
+
+    <table>
+        <tr><th>File</th><th>Purpose</th><th>Details</th></tr>
+        <tr>
+            <td><code>claude-slack-approver.py</code></td>
+            <td>PreToolUse &amp; PostToolUse Hook</td>
+            <td>
+                Reads hook JSON from stdin, classifies commands, posts to Slack, polls for reactions/replies.<br>
+                Called with <code>--resolve</code> flag by the PostToolUse hook to update Slack after terminal approval.
+            </td>
+        </tr>
+        <tr>
+            <td><code>claude-slack-daemon.py</code></td>
+            <td>Chat Daemon</td>
+            <td>
+                Long-running process. Polls Slack every N seconds for new messages. Launches <code>claude -p --dangerously-skip-permissions</code> and posts responses as thread replies. Manages sessions via <code>sessions.json</code>. Prompts are wrapped with Slack formatting instructions. Shows a "thinking" indicator that is deleted once the response is ready.
+            </td>
+        </tr>
+        <tr>
+            <td><code>command-rules.json</code></td>
+            <td>Command Classification</td>
+            <td>
+                JSON file defining safe/risky/deny command prefixes and regex patterns.
+            </td>
+        </tr>
+        <tr>
+            <td><code>start-daemon.sh</code></td>
+            <td>Daemon Manager</td>
+            <td>
+                Bash script to start/stop/status/logs the daemon via tmux.
+            </td>
+        </tr>
+        <tr>
+            <td><code>.env</code></td>
+            <td>Configuration</td>
+            <td>
+                Slack credentials, default project directory, poll interval, and project shortcuts.
+            </td>
+        </tr>
+        <tr>
+            <td><code>sessions.json</code></td>
+            <td>Session Tracking (auto-managed)</td>
+            <td>
+                Maps Slack thread timestamps to Claude Code session IDs. Auto-cleaned: entries older than 24 hours are removed.
+            </td>
+        </tr>
+        <tr>
+            <td><code>/tmp/claude-slack-pending.json</code></td>
+            <td>Pending Approval (temp file)</td>
+            <td>
+                Created by PreToolUse when waiting for Slack approval. Read and deleted by PostToolUse to update Slack if terminal approval was used instead.
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 13: TROUBLESHOOTING                                         -->
+<!-- ================================================================== -->
+<div class="section" id="troubleshooting">
+    <h2>13. Troubleshooting</h2>
+
+    <h3>Approval Hook Issues</h3>
+    <table>
+        <tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+        <tr>
+            <td>No Slack messages appear</td>
+            <td>Missing or invalid token / channel ID</td>
+            <td>Verify <code>SLACK_BOT_TOKEN</code> and <code>SLACK_CHANNEL_ID</code> in <code>.env</code>. Test with: <code>python3 -c "from claude-slack-approver import *; print(slack_post('auth.test', {}))"</code></td>
+        </tr>
+        <tr>
+            <td>Hook doesn't trigger</td>
+            <td>Hook not configured in settings</td>
+            <td>Check <code>~/.claude/settings.json</code> has the PreToolUse hook with the correct path to the script</td>
+        </tr>
+        <tr>
+            <td>All commands go to Slack (too noisy)</td>
+            <td>Commands not in safe list</td>
+            <td>Add frequently-used safe commands to <code>command-rules.json</code> safe prefixes</td>
+        </tr>
+        <tr>
+            <td>Emoji reactions not detected</td>
+            <td>Missing <code>reactions:read</code> scope</td>
+            <td>Add the scope in your Slack app settings and reinstall to workspace</td>
+        </tr>
+        <tr>
+            <td>Approval always times out</td>
+            <td>Network/firewall blocking Slack API</td>
+            <td>Check network connectivity to <code>slack.com</code> from WSL. The hook uses stdlib <code>urllib</code> — no proxy config by default.</td>
+        </tr>
+        <tr>
+            <td>"Approved via terminal" never updates in Slack</td>
+            <td>PostToolUse hook not configured</td>
+            <td>Add the <code>PostToolUse</code> hook with <code>--resolve</code> flag to <code>settings.json</code></td>
+        </tr>
+    </table>
+
+    <h3>Daemon Issues</h3>
+    <table>
+        <tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+        <tr>
+            <td>Daemon won't start</td>
+            <td>Missing bot token or channel</td>
+            <td>The daemon exits with an error message if <code>SLACK_BOT_TOKEN</code> or <code>SLACK_CHANNEL_ID</code> is missing</td>
+        </tr>
+        <tr>
+            <td>"claude CLI not found"</td>
+            <td><code>claude</code> not on PATH</td>
+            <td>Ensure Claude Code CLI is installed: <code>which claude</code>. Install via <code>npm install -g @anthropic-ai/claude-code</code></td>
+        </tr>
+        <tr>
+            <td>"Cannot be launched inside another Claude Code session"</td>
+            <td><code>CLAUDECODE</code> env var inherited from parent session</td>
+            <td>The daemon already handles this by unsetting <code>CLAUDECODE</code> before spawning child processes. If you see this error, ensure you're running the latest version of <code>claude-slack-daemon.py</code>.</td>
+        </tr>
+        <tr>
+            <td>Daemon doesn't respond to messages</td>
+            <td>Bot not in the channel</td>
+            <td>Invite the bot: <code>/invite @YourBotName</code> in the Slack channel</td>
+        </tr>
+        <tr>
+            <td>Duplicate responses</td>
+            <td>Multiple daemon instances running</td>
+            <td>Check with <code>./start-daemon.sh status</code> and stop extras with <code>./start-daemon.sh stop</code></td>
+        </tr>
+        <tr>
+            <td>Thread replies not continuing session</td>
+            <td>Session expired (24h) or sessions.json corrupted</td>
+            <td>Delete <code>sessions.json</code> and start a new conversation</td>
+        </tr>
+        <tr>
+            <td>Response cut off at 4000 chars</td>
+            <td>Slack message length limit</td>
+            <td>This is expected — long responses are automatically split into multiple thread replies</td>
+        </tr>
+    </table>
+
+    <h3>Testing Your Setup</h3>
+    <pre><code><span class="comment"># 1. Test Slack connectivity</span>
+python3 -c "
+import json, urllib.request
+token = 'xoxb-YOUR-TOKEN'
+req = urllib.request.Request(
+    'https://slack.com/api/auth.test',
+    json.dumps({}).encode(),
+    {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+)
+resp = urllib.request.urlopen(req)
+print(json.loads(resp.read()))
+"
+
+<span class="comment"># 2. Test command classification</span>
+python3 -c "
+import sys; sys.path.insert(0, '/mnt/c/projects/claude-slack-approver')
+from importlib import import_module
+mod = import_module('claude-slack-approver')
+print('ls:', mod.classify_command('ls -la'))
+print('rm:', mod.classify_command('rm -rf /tmp/test'))
+print('git push:', mod.classify_command('git push origin main'))
+"
+
+<span class="comment"># 3. Check daemon status</span>
+/mnt/c/projects/claude-slack-approver/start-daemon.sh status</code></pre>
+
+    <div class="info-box">
+        <p class="box-label">Getting Help</p>
+        <p>Check the daemon logs for detailed error output: <code>./start-daemon.sh logs</code> (press <code>Ctrl+B</code> then <code>D</code> to detach from tmux without stopping the daemon).</p>
+    </div>
+</div>
+
+</body>
+</html>
