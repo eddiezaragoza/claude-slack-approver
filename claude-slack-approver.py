@@ -28,6 +28,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE = os.path.join(SCRIPT_DIR, ".env")
 RULES_FILE = os.path.join(SCRIPT_DIR, "command-rules.json")
 PENDING_FILE = "/tmp/claude-slack-pending.json"
+TERMINAL_DECISION_FILE = "/tmp/claude-terminal-decision"
 
 POLL_INTERVAL = 2        # seconds between polls
 TIMEOUT = 300            # 5 minutes total
@@ -301,6 +302,40 @@ def clear_pending():
         pass
 
 
+def check_terminal_decision():
+    """
+    Check if the user approved/denied from the terminal via the signal file.
+    Returns ("allow", reason), ("deny", reason), or (None, None).
+    """
+    if not os.path.isfile(TERMINAL_DECISION_FILE):
+        return None, None
+    try:
+        with open(TERMINAL_DECISION_FILE) as f:
+            content = f.read().strip()
+        os.unlink(TERMINAL_DECISION_FILE)
+    except (OSError, IOError):
+        return None, None
+
+    # First line is the decision, rest is optional reason/feedback
+    lines = content.split("\n", 1)
+    decision = lines[0].strip().lower()
+    reason = lines[1].strip() if len(lines) > 1 else ""
+
+    if decision in ("allow", "approve", "yes", "y", "ok"):
+        return "allow", reason
+    elif decision in ("deny", "no", "n", "reject"):
+        return "deny", reason
+    return None, None
+
+
+def clear_terminal_decision():
+    """Remove any stale terminal decision file."""
+    try:
+        os.unlink(TERMINAL_DECISION_FILE)
+    except FileNotFoundError:
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Format the approval message
 # ---------------------------------------------------------------------------
@@ -433,6 +468,7 @@ def main():
                 "permissionDecisionReason": "Auto-approved: safe command",
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
         elif classification == "deny":
@@ -443,6 +479,7 @@ def main():
                 "permissionDecisionReason": "Blocked: command matches deny rules",
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
         # classification == "risky" — fall through to Slack approval
@@ -466,12 +503,55 @@ def main():
     # Get bot user ID for filtering thread replies
     bot_user_id = get_bot_user_id()
 
-    # --- Phase 2: Poll for emoji reactions AND thread replies ---
+    # Clear any stale terminal decision file before polling
+    clear_terminal_decision()
+
+    # --- Phase 2: Poll for Slack reactions, thread replies, AND terminal signal ---
     start = time.time()
     while time.time() - start < TIMEOUT:
         time.sleep(POLL_INTERVAL)
 
-        # Check emoji reactions first
+        # Check terminal signal file first (fastest response)
+        term_decision, term_reason = check_terminal_decision()
+        if term_decision == "allow":
+            reason = "Approved via terminal"
+            if term_reason:
+                reason = f"Approved via terminal. Feedback: {term_reason}"
+            updated = message_text.replace(
+                FOOTER_TEXT,
+                ":white_check_mark: *Approved via terminal*"
+            )
+            update_message(msg_ts, updated)
+            clear_pending()
+            result = {"hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "allow",
+                "permissionDecisionReason": reason,
+            }}
+            print(json.dumps(result))
+            sys.stdout.flush()
+            sys.exit(0)
+
+        elif term_decision == "deny":
+            reason = "Denied via terminal"
+            if term_reason:
+                reason = f"Denied via terminal. Feedback: {term_reason}"
+            updated = message_text.replace(
+                FOOTER_TEXT,
+                ":no_entry_sign: *Denied via terminal*"
+            )
+            update_message(msg_ts, updated)
+            clear_pending()
+            result = {"hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            }}
+            print(json.dumps(result))
+            sys.stdout.flush()
+            sys.exit(0)
+
+        # Check Slack emoji reactions
         decision = check_reactions(msg_ts)
 
         if decision == "allow":
@@ -487,6 +567,7 @@ def main():
                 "permissionDecisionReason": "Approved via Slack",
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
         elif decision == "deny":
@@ -502,6 +583,7 @@ def main():
                 "permissionDecisionReason": "Denied via Slack",
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
         # Check thread replies for text-based feedback
@@ -523,6 +605,7 @@ def main():
                 "permissionDecisionReason": reason,
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
         elif reply_decision == "deny":
@@ -539,6 +622,7 @@ def main():
                 "permissionDecisionReason": reason,
             }}
             print(json.dumps(result))
+            sys.stdout.flush()
             sys.exit(0)
 
     # Timeout — fall back to terminal prompt (keep pending file for PostToolUse)

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Quick deny from terminal: run `cx` to deny the pending command
+# Optionally add feedback: `cx use npm ci instead`
+if [ $# -gt 0 ]; then
+    printf "deny\n%s\n" "$*" > /tmp/claude-terminal-decision
+else
+    echo "deny" > /tmp/claude-terminal-decision
+fi
+echo "Denied."

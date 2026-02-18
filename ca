@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Quick approve from terminal: run `ca` to approve the pending command
+# Optionally add feedback: `ca use the staging server`
+if [ $# -gt 0 ]; then
+    printf "allow\n%s\n" "$*" > /tmp/claude-terminal-decision
+else
+    echo "allow" > /tmp/claude-terminal-decision
+fi
+echo "Approved."
