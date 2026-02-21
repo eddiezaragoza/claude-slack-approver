@@ -60,7 +60,7 @@ def load_env(path):
 config = load_env(ENV_FILE)
 
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN", config.get("SLACK_BOT_TOKEN", ""))
-SLACK_CHANNEL_ID = os.environ.get("SLACK_CHANNEL_ID", config.get("SLACK_CHANNEL_ID", ""))
+SLACK_CHANNEL_ID = os.environ.get("SLACK_CHAT_CHANNEL_ID", config.get("SLACK_CHAT_CHANNEL_ID", ""))
 DEFAULT_PROJECT_DIR = config.get("DEFAULT_PROJECT_DIR", "/mnt/c/projects")
 POLL_INTERVAL = int(config.get("DAEMON_POLL_INTERVAL", "3"))
 
@@ -397,13 +397,13 @@ def _get_latest_channel_ts():
     })
     if resp.get("ok") and resp.get("messages"):
         return resp["messages"][0]["ts"]
-    # Fallback to system time
-    return str(time.time())
+    # Fallback: start from beginning — safe since seen_messages deduplicates
+    return "0"
 
 
 def main():
     if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
-        print("ERROR: Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID in .env", file=sys.stderr)
+        print("ERROR: Missing SLACK_BOT_TOKEN or SLACK_CHAT_CHANNEL_ID in .env", file=sys.stderr)
         sys.exit(1)
 
     bot_user_id = get_bot_user_id()

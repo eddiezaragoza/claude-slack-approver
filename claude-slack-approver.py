@@ -208,6 +208,16 @@ def update_message(ts, text):
     })
 
 
+def delete_message(ts):
+    """Delete a Slack message after it's been resolved (approved/denied)."""
+    resp = slack_post("chat.delete", {
+        "channel": SLACK_CHANNEL_ID,
+        "ts": ts,
+    })
+    if not resp.get("ok"):
+        print(f"Slack delete failed: {resp.get('error')}", file=sys.stderr)
+
+
 def check_reactions(msg_ts):
     """
     Check emoji reactions on a message.
@@ -283,13 +293,12 @@ def check_thread_replies(msg_ts, bot_user_id):
 # Pending file — lets PostToolUse hook update Slack after terminal approval
 # ---------------------------------------------------------------------------
 
-def save_pending(msg_ts, original_text):
-    """Save pending approval info so PostToolUse can update Slack."""
+def save_pending(msg_ts):
+    """Save pending approval info so PostToolUse can delete the Slack message."""
     with open(PENDING_FILE, "w") as f:
         json.dump({
             "msg_ts": msg_ts,
             "channel": SLACK_CHANNEL_ID,
-            "original_text": original_text,
             "timestamp": time.time(),
         }, f)
 
@@ -408,7 +417,7 @@ def format_tool_request(hook_input):
 
 def resolve_pending():
     """Called after a tool completes. If there's a pending Slack message,
-    update it to show it was approved via the terminal."""
+    delete it since the approval has been resolved."""
     if not os.path.isfile(PENDING_FILE):
         return
     try:
@@ -419,14 +428,9 @@ def resolve_pending():
         return
 
     msg_ts = pending.get("msg_ts")
-    original_text = pending.get("original_text", "")
 
     if msg_ts and SLACK_BOT_TOKEN:
-        updated = original_text.replace(
-            FOOTER_TEXT,
-            ":white_check_mark: *Approved via terminal*"
-        )
-        update_message(msg_ts, updated)
+        delete_message(msg_ts)
 
     clear_pending()
 
@@ -455,6 +459,10 @@ def main():
     if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
         print("Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID", file=sys.stderr)
         sys.exit(0)
+
+    # Clean up any stale pending message from a previous denied tool
+    # (PostToolUse only fires when a tool runs, so denials leave orphans)
+    resolve_pending()
 
     # --- Phase 1: Smart command filtering for Bash commands ---
     if tool_name == "Bash" and tool_input.get("command"):
@@ -497,8 +505,8 @@ def main():
     if not msg_ts:
         sys.exit(0)
 
-    # Save pending file so PostToolUse can update if terminal approves
-    save_pending(msg_ts, message_text)
+    # Save pending file so PostToolUse can delete the message after resolution
+    save_pending(msg_ts)
 
     # Get bot user ID for filtering thread replies
     bot_user_id = get_bot_user_id()
@@ -517,11 +525,7 @@ def main():
             reason = "Approved via terminal"
             if term_reason:
                 reason = f"Approved via terminal. Feedback: {term_reason}"
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                ":white_check_mark: *Approved via terminal*"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
@@ -536,11 +540,7 @@ def main():
             reason = "Denied via terminal"
             if term_reason:
                 reason = f"Denied via terminal. Feedback: {term_reason}"
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                ":no_entry_sign: *Denied via terminal*"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
@@ -555,11 +555,7 @@ def main():
         decision = check_reactions(msg_ts)
 
         if decision == "allow":
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                ":white_check_mark: *Approved via Slack*"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
@@ -571,11 +567,7 @@ def main():
             sys.exit(0)
 
         elif decision == "deny":
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                ":no_entry_sign: *Denied via Slack*"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
@@ -593,11 +585,7 @@ def main():
             reason = f"Approved via Slack thread"
             if reply_text:
                 reason = f"Approved via Slack thread. User feedback: {reply_text}"
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                f":white_check_mark: *Approved via thread reply*"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
@@ -610,11 +598,7 @@ def main():
 
         elif reply_decision == "deny":
             reason = f"User feedback: {reply_text}"
-            updated = message_text.replace(
-                FOOTER_TEXT,
-                f":speech_balloon: *Denied with feedback:* {reply_text}"
-            )
-            update_message(msg_ts, updated)
+            delete_message(msg_ts)
             clear_pending()
             result = {"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
